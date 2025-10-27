@@ -2,7 +2,10 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AcidLovingCropController;
+use App\Http\Controllers\Api\CropsContoller;
+use App\Http\Controllers\Api\CropsFertRightController;
 use App\Http\Controllers\Api\LandscapeController;
+use App\Http\Controllers\Api\MslRstController;
 
 Route::get('/test', function () {
     return response()->json(['message' => 'Web route working!']);
@@ -20,6 +23,31 @@ Route::prefix('acid-loving-crop')->group(function () {
 Route::prefix('landscape')->group(function () {
     Route::get('/', [LandscapeController::class, 'index']);   // List all crops
     Route::post('/', [LandscapeController::class, 'store']);  // Create new crop(s)
+    // Route::get('/{id}', [AcidLovingCropController::class, 'show']);       // Show single crop
+    // Route::put('/{id}', [AcidLovingCropController::class, 'update']);     // Update crop
+    // Route::delete('/{id}', [AcidLovingCropController::class, 'destroy']); // Delete crop
+});
+
+Route::prefix('crops')->group(function () {
+    Route::get('/', [CropsContoller::class, 'index']);   // List all crops
+    Route::post('/', [CropsContoller::class, 'store']);  // Create new crop(s)
+    // Route::get('/{id}', [AcidLovingCropController::class, 'show']);       // Show single crop
+    // Route::put('/{id}', [AcidLovingCropController::class, 'update']);     // Update crop
+    // Route::delete('/{id}', [AcidLovingCropController::class, 'destroy']); // Delete crop
+});
+
+
+Route::prefix('crops-fert-right')->group(function () {
+    Route::get('/', [CropsFertRightController::class, 'index']);   // List all crops
+    Route::post('/', [CropsFertRightController::class, 'store']);  // Create new crop(s)
+    // Route::get('/{id}', [AcidLovingCropController::class, 'show']);       // Show single crop
+    // Route::put('/{id}', [AcidLovingCropController::class, 'update']);     // Update crop
+    // Route::delete('/{id}', [AcidLovingCropController::class, 'destroy']); // Delete crop
+});
+
+Route::prefix('msl-rst')->group(function () {
+    Route::get('/', [MslRstController::class, 'index']);   // List all crops
+    Route::post('/', [MslRstController::class, 'store']);  // Create new crop(s)
     // Route::get('/{id}', [AcidLovingCropController::class, 'show']);       // Show single crop
     // Route::put('/{id}', [AcidLovingCropController::class, 'update']);     // Update crop
     // Route::delete('/{id}', [AcidLovingCropController::class, 'destroy']); // Delete crop
