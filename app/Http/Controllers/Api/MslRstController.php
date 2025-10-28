@@ -48,7 +48,7 @@ class MslRstController extends Controller
         $validated = $request->validate([
             '*.farm_area' => 'nullable|numeric',
             '*.longitude' => 'nullable|string|max:100',
-            '*.latitude' => 'required|string|max:200',
+            '*.latitude' => 'nullable|string|max:200',
             '*.soil_texture' => 'nullable|string',
             '*.ph' => 'nullable|numeric',
             '*.soil_ph_interpretation' => 'nullable|string',
@@ -60,7 +60,7 @@ class MslRstController extends Controller
             '*.municipality' => 'required|string|max:100',
             '*.barangay' => 'nullable|string',
             '*.province' => 'required|string',
-            '*.crops' => 'required|string',
+            '*.crops' => 'nullable|string',
         ]);
 
 
@@ -75,30 +75,39 @@ class MslRstController extends Controller
             $result = DB::transaction(function () use ($validated) {
                 $cnt = 0;
                 foreach ($validated as &$record) {
-                    $crops = explode(',', $record['crops']); 
-                    foreach ($crops as $key => $value) {
-                        $cropsRecord = DB::table('crops_fert_right')
-                            ->join('crops','crops_fert_right.crop_type','=','crops.id')
-                            ->select('crops_fert_right.*', 'crops.type')
-                            ->where('crops.type','=', $value)
-                            ->where('crops_fert_right.shc_number', $record['shc_number'])
-                            ->get();
+                    if(isset($record['crops'])){
+                        $crops = explode(',', $record['crops']); 
+                        foreach ($crops as $key => $value) {
+                            $cropsRecord = DB::table('crops_fert_right')
+                                ->join('crops','crops_fert_right.crop_type','=','crops.id')
+                                ->select('crops_fert_right.*', 'crops.type')
+                                ->where('crops.type','=', $value)
+                                ->where('crops_fert_right.shc_number', $record['shc_number'])
+                                ->get();
 
-                        $crop = crops::where('type', '=', $value)->first();
-                        
-                        if($cropsRecord->isEmpty()) {
-                            
-                            crops_fert_right::create([
-                                'shc_number' => $record['shc_number'],
-                                'crop_type' => $crop->id,
-                            ]);
+                            $crop = crops::where('type', '=', $value)
+                                ->orWhere("code",'=',$value)
+                                ->first();
+                            // dd($record['crops']);
+                            // var_dump($cropsRecord);
+                            if($cropsRecord->isEmpty()) {
+                                
+                                
+                                crops_fert_right::create([
+                                    'shc_number' => $record['shc_number'],
+                                    'crop_type' => $crop->id,
+                                ]);
+                            }
+
                         }
-
+                        
                     }
-                    unset($record['crops']); 
 
+                    unset($record['crops']); 
+                    
                     $dups = msl_rst::where('shc_number', '=', $record['shc_number'])
                         ->exists();
+                        
                     if (!$dups) {
                         msl_rst::insert($record);
                         $cnt++;

@@ -10,8 +10,8 @@ class msl_rst extends Model
 
     protected $fillable = [
         'farm_area',
-        'longitude',
-        'latitude',
+        'longitude' => 'nullable|string|max:100',
+        'latitude' => 'nullable|string|max:100',
         'soil_texture ',
         'ph',
         'soil_ph_interpretation',
