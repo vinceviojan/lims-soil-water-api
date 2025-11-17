@@ -29,7 +29,7 @@ class MslRstController extends Controller
 
     public function index()
     {
-        $msl = msl_rst::all();
+        $msl = msl_rst::whereNotNull('latitude')->whereNotNull('longitude')->get();
         if($msl->isEmpty()){
             return $this->failed("", "No record found");
         }
@@ -88,8 +88,6 @@ class MslRstController extends Controller
                             $crop = crops::where('type', '=', $value)
                                 ->orWhere("code",'=',$value)
                                 ->first();
-                            // dd($record['crops']);
-                            // var_dump($cropsRecord);
                             if($cropsRecord->isEmpty()) {
                                 
                                 

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\acid_loving_crop;
 use Illuminate\Http\Request;
 use app\Models\AcidLovingCrop;
+use App\Models\crops;
 
 class AcidLovingCropController extends Controller
 {
@@ -43,7 +44,6 @@ class AcidLovingCropController extends Controller
      */
     public function store(Request $request)
     {
-        // dd($request->all());
          $validated = $request->validate([
             '*.crops' => 'required|string|max:100',
             '*.category_code' => 'required|string|max:100',
@@ -54,16 +54,53 @@ class AcidLovingCropController extends Controller
         ]);
 
         $now = now();
-        foreach ($validated as &$record) {
-            $record['created_at'] = $now;
-            $record['updated_at'] = $now;
+
+        $successCnt = 0;
+        $failCnt = 0;
+        $dataCnt = 0;
+        $failedMessage = [];
+        foreach ($validated as &$data) {
+            $data['created_at'] = $now;
+            $data['updated_at'] = $now;
+
+            if($data["crops"] == "corn"){
+                
+            }
+            else{
+                $crop = crops::where('type', strtolower($data["crops"]))->first();
+            }
+                
+            if($crop){
+                $data["crops"] = $crop["code"];
+                $resp = $this->insertData($data);
+                $dataCnt++;
+                $getData = $resp->getData();
+                if($getData->isSuccess == true){
+                    $successCnt++;
+                }
+                else{
+                    $failCnt++;
+                    $failedMessage[] = $getData->message . " Cnt #" . $dataCnt;
+                }
+            }
+            else{
+                $failCnt++;
+                $failedMessage[] = "Crop type " . $data["crops"] . " does not exist. Cnt #" . $dataCnt;
+            }
         }
 
-        if( acid_loving_crop::insert($validated) ){
-            return $this->success(count($validated), "Acid Loving Crop records added successfully");
+        if($successCnt > 0){
+            return $this->success(
+                [
+                    'successful_inserts' => $successCnt,
+                    'failed_inserts' => $failCnt,
+                    'failed_messages' => $failedMessage
+                ], 
+                "Data inserted successfully."
+            );
         }
         else{
-            return $this->failed("", "Failed to add Acid Loving Crop records");
+            return $this->failed($failedMessage, "Failed to insert data.");
         }
         
     }
@@ -91,4 +128,26 @@ class AcidLovingCropController extends Controller
     {
         //
     }
+
+    public function insertData($request)
+    {
+        $recordExists = acid_loving_crop::where('crops', $request['crops'])
+                        ->where('category_code', $request['category_code'])
+                        ->where('min_ph', $request['min_ph'])
+                        ->where('max_ph', $request['max_ph'])
+                        ->exists();
+
+        if( !$recordExists ) {
+            if( acid_loving_crop::insert($request) ){
+                return $this->success("", "Acid Loving Crop records added successfully");
+            }
+            else{
+                return $this->failed("", "Failed to add Acid Loving Crop records");
+            }
+        }
+        else {
+            return $this->failed("", "Duplicate Acid Loving Crop record found");
+        }
+    }
+
 }
