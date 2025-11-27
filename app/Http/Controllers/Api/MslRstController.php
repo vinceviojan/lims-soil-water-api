@@ -29,7 +29,9 @@ class MslRstController extends Controller
 
     public function index()
     {
-        $msl = msl_rst::whereNotNull('latitude')->whereNotNull('longitude')->get();
+        $msl = msl_rst::whereNotNull('latitude')->whereNotNull('longitude')
+            // ->limit(10)
+            ->get();
         if($msl->isEmpty()){
             return $this->failed("", "No record found");
         }
@@ -119,11 +121,21 @@ class MslRstController extends Controller
             return $this->failed('', $e->getMessage());
         }
 
+    }
 
-        
-
-        
-
+    public function getYearList()
+    {
+        $msl = msl_rst::select(DB::raw('DISTINCT YEAR(sampling_date) as year'))
+                ->whereNotNull('sampling_date')
+                ->orderBy('year', 'desc')
+                ->get();
+            
+        if($msl->isEmpty()){
+            return $this->failed("", "No record found");
+        }
+        else{
+            return $this->success($msl, "Retrieved successfully");
+        }
     }
 
     /**

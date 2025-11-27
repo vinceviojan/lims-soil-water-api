@@ -27,7 +27,7 @@ class CropsContoller extends Controller
 
     public function index()
     {
-        $crops = crops::all();
+        $crops = crops::orderBy('type', 'asc')->get();
         if($crops->isEmpty()){
             return $this->failed("", "No record found");
         }

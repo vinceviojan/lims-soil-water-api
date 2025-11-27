@@ -42,12 +42,12 @@ body {
 }
 .summary-table th,
 .summary-table td {
-    border: 1px solid #000;
+    border-bottom: 1px solid #C3C3C3;
     padding: 6px 8px;
     text-align: center;
 }
 .summary-table th {
-    background: #eee;
+    background: #ddd;
     font-weight: 700;
 }
 
@@ -60,7 +60,7 @@ body {
 }
 .crop-table th,
 .crop-table td {
-    border: 1px solid #000;
+    border-bottom: 1px solid #C3C3C3;
     padding: 8px 10px;
     text-align: center;
 }
@@ -73,12 +73,16 @@ body {
     width: 100%;
     border-collapse: collapse;
     font-size: 13px;
-    margin-bottom: 5px;
+    /* margin-bottom: 5px; */
 }
 
 .result-table th,
 .result-table td {
-    border: 1px solid #000;
+    border-top: 1px solid #000;
+    border-right: 1px solid #000;
+    border-bottom: 0;
+    border-left: 1px solid #000;
+
     padding: 8px 10px;
     text-align: center;
     padding: 10px;
@@ -141,7 +145,7 @@ body {
 .mode-box {
     border: 1px solid #000;
     background: #fff;
-    padding: 12px;
+    padding: 0 12px 0 12px;
     font-size: 13px;
     line-height: 1.45;
     margin-bottom: 8px;
@@ -153,6 +157,7 @@ body {
     color: #333;
     line-height: 1.4;
     margin-bottom: 6px;
+    margin-top: 10px;
 }
 .page-num {
     position: absolute;
@@ -162,24 +167,31 @@ body {
     left: 47%;
 }
 
-/* Responsive/print */
-/* @media (max-width: 900px) {
-    .meta {
-        flex-direction: column;
-    }
-    .meta .col {
-        width: 100%;
-    }
-    .options-wrap {
-        grid-template-columns: 1fr;
-    }
-    .option3 {
-        width: 100%;
-    }
+.mode-table{
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    /* margin-bottom: 5px; */
 }
-@media print {
-    .page {
-        background: rgba(255, 255, 255, 0.92);
-        border-radius: 0;
-    }
-} */
+
+.mode-table th,
+.mode-table td {
+    border-right: 1px solid #000;
+    border-bottom: 0;
+    border-left: 1px solid #000;
+    border-bottom: 1px solid #000;
+
+
+    padding: 8px 10px;
+    text-align: center;
+    padding: 10px;
+    font-size: 13px;
+    /* line-height: 1.45; */
+}
+
+.mode-table th {
+    background: #eee;
+    padding: 8px 10px;
+    text-align: center;
+    font-weight: 700;
+}

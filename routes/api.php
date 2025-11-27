@@ -49,6 +49,7 @@ Route::prefix('crops-fert-right')->group(function () {
 Route::prefix('msl-rst')->group(function () {
     Route::get('/', [MslRstController::class, 'index']);   
     Route::post('/', [MslRstController::class, 'store']);  
+    Route::get('/getYearList', [MslRstController::class, 'getYearList']);
     // Route::get('/{id}', [AcidLovingCropController::class, 'show']);       
     // Route::put('/{id}', [AcidLovingCropController::class, 'update']);     
     // Route::delete('/{id}', [AcidLovingCropController::class, 'destroy']); 
@@ -57,6 +58,10 @@ Route::prefix('msl-rst')->group(function () {
 Route::prefix('fert-right')->group(function () {
     // Route::get('/', [MslRstController::class, 'index']);   // List all crops
     Route::post('/', [FertRightResultController::class, 'show']);  
+    Route::get('/getVariety', [FertRightResultController::class, 'getVariety']);
+    Route::get('/getLandscape', [FertRightResultController::class, 'getLandscape']);
+    Route::get('/getAge', [FertRightResultController::class, 'getAge']);
+    Route::post('/getFertRightResult', [FertRightResultController::class, 'getFertRightResult']);
     // Route::get('/{id}', [AcidLovingCropController::class, 'show']);       
     // Route::put('/{id}', [AcidLovingCropController::class, 'update']);     
     // Route::delete('/{id}', [AcidLovingCropController::class, 'destroy']); 

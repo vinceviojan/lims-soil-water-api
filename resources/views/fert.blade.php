@@ -6,11 +6,18 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Fertilizer Recommendation Result</title>
     <link rel="stylesheet" href="{{ public_path('css/fert.css') }}" />
-    {{-- <link rel="stylesheet" href="css/fert.css"> --}}
+    {{--
+    <link rel="stylesheet" href="css/fert.css"> --}}
 </head>
 
+@php
+    $decimal = floatval($ph);
+    $formatted = number_format($decimal, 1, '.', '');
+@endphp
 <body>
+
     <div class="page" role="document" aria-label="Fertilizer Recommendation Result">
+        <hr>
         <table class="summary-table" role="table" aria-label="Soil summary">
             <thead>
                 <tr>
@@ -23,113 +30,198 @@
             </thead>
             <tbody>
                 <tr>
-                    <td>6.1</td>
-                    <td>LOW</td>
-                    <td>MEDIUM</td>
-                    <td>MEDIUM</td>
-                    <td>150 - 35 - 60</td>
+                    <td> {{ $formatted }}</td>
+                    <td>{{ $nitro }}</td>
+                    <td>{{ $phosphor }}</td>
+                    <td>{{ $potass }}</td>
+                    <td>{{ $fertilizer_rate }}</td>
                 </tr>
             </tbody>
         </table>
+        @php
+            // print_r($results);
 
+        @endphp
         <table class="crop-table" role="table" aria-label="Crop and landscape">
             <thead>
                 <tr>
                     <th>Crop</th>
-                    <th>Landscape</th>
+                    @php
+                        if (isset($variety) && !empty($variety)) {
+                            echo "<th>Variety</th>";
+                        }
+
+                        if (isset($landscape) && !empty($landscape)) {
+                            echo "<th>Landscape</th>";
+                        }
+
+                        if(isset($age) && !empty($age)){
+                            echo "<th>Year/Age</th>";
+                        }
+
+                    @endphp
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td style="font-weight: 700">CABBAGE</td>
-                    <td style="font-weight: 700">HIGHLAND</td>
+                    <td >{{ $crop }}</td>
+                    @php
+                        if (isset($variety) && !empty($variety)) {
+                            echo "<td>" . $variety . "</td>";
+                        }
+
+                        if (isset($landscape) && !empty($landscape)) {
+                            echo "<td>" . $landscape . "</td>";
+                        }
+
+                        if(isset($age) && !empty($age)){
+                            echo "<td>" . $age . "</td>";
+                        }
+
+                    @endphp
                 </tr>
             </tbody>
         </table>
 
-        <table class="result-table" role = "table" aria-label="Result">
-             <thead>
+        <table class="result-table" role="table" aria-label="Result">
+            <thead>
                 <tr>
-                    <th>OPTION 1</th>
-                    <th>OPTION 2</th>
+                    @php
+                        $cnt = count($results);
+                        for ($i = 0; $i < $cnt; $i++) {
+                            echo "<th>OPTION " . ($i + 1) . "</th>";
+                        }
+                        
+                    @endphp
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td>
-                        1st Application
-                        <ul style="margin: 6px 0 8px 18px; padding: 0">
-                        <li>10 bags/ha (Organic Fertilizer)</li>
-                        <li>5.00 bags/ha (14-14-14)</li>
-                        <li>1.75 bags/ha (46-0-0)</li>
-                        <li>0.75 bag/ha (0-0-60)</li>
-                        <br>
-                        2ND APPLICATION
-                    </ul>
-                    </td>
-                    <td>
-                        1st Application
-                        <ul style="margin: 6px 0 8px 18px; padding: 0">
-                        <li>10 bags/ha (Organic Fertilizer)</li>
-                        <li>3.50 bags/ha (16-20-0)</li>
-                        <li>2.00 bags/ha (46-0-0)</li>
-                        <li>2.00 bags/ha (0-0-60)</li>
-                    </ul>
-                    </td>
+                    @php
+                        $formatted = "";
+                        $ctr = 0;
+                        foreach($results as $text){
+                            $lines = explode("\n", $text["result"]);
+                            // if($ctr < 2){
+                                foreach ($lines as $line) {
+                                // Detect "Application:" lines
+                                    if (str_contains($line, "Application:")) {
+                                        $appsli = explode("Application:", $line);
+                                        $formatted .= "\n" . trim($appsli[0]) . " Applications:\n";
+                                        if(isset($appsli[1]) && !empty($appsli[1])){
+                                             $formatted .= "    • " . trim($appsli[1]) . "\n";
+                                        }
+                                    } 
+                                    else if (str_contains($line, "application:")) {
+                                        $appsli = explode("application:", $line);
+                                        $formatted .= "\n" . trim($appsli[0]) . " Applications:\n";
+                                        if(isset($appsli[1]) && !empty($appsli[1])){
+                                             $formatted .= "    • " . trim($appsli[1]) . "\n";
+                                        }
+                                    }
+                                    else {
+                                        if(!empty(trim($line))){
+                                            $formatted .= "    • " . trim($line) . "\n";
+                                        }
+                                    }
+                                    
+                                }
+                                echo '
+                                    <td>' . nl2br(trim($formatted)) . '</td>
+                                ';
+                                $formatted = "";
+                            // }
+                            $ctr++;
+                        }
+                    @endphp
                 </tr>
             </tbody>
         </table>
 
-        <!-- Option 3 centered beneath -->
-        <div class="option3-row">
-            <div class="option3" aria-labelledby="opt3">
-                <div class="opt-title" id="opt3">OPTION 3</div>
-                <div class="opt-body">
-                    <div style="font-weight: 700; margin-bottom: 6px">
-                        1st Application
+        @php
+            // if(count($results) > 2){
+                
+
+            //     echo '
+            //         <table class="result-table" role="table" aria-label="Result">
+            //             <thead>
+            //                 <tr>
+            //                     <th>OPTION 1</th>
+            //                     {{-- <th>OPTION 2</th> --}}
+            //                 </tr>
+            //             </thead>
+            //             <tbody>
+            //                 <tr>
+            //                     <td>
+            //                         1st Application
+            //                         <ul style="margin: 6px 0 8px 18px; padding: 0">
+            //                             <li>10 bags/ha (Organic Fertilizer)</li>
+            //                             <li>5.00 bags/ha (14-14-14)</li>
+            //                             <li>1.75 bags/ha (46-0-0)</li>
+            //                             <li>0.75 bag/ha (0-0-60)</li>
+            //                             <br>
+            //                             2ND APPLICATION
+            //                         </ul>
+            //                     </td>
+            //                     {{-- <td>
+            //                         1st Application
+            //                         <ul style="margin: 6px 0 8px 18px; padding: 0">
+            //                             <li>10 bags/ha (Organic Fertilizer)</li>
+            //                             <li>3.50 bags/ha (16-20-0)</li>
+            //                             <li>2.00 bags/ha (46-0-0)</li>
+            //                             <li>2.00 bags/ha (0-0-60)</li>
+            //                         </ul>
+            //                     </td> --}}
+            //                 </tr>
+            //             </tbody>
+            //         </table>
+            //     ';
+            // }
+        @endphp
+       
+        <table class="mode-table" role="table" aria-label="Result">
+            <thead>
+                <tr>
+                    <th class="mode-app">MODE OF APPLICATION</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    @php
+                            $formatted = "";
+                        $lines = explode("\n", $mode_of_application);
+                        foreach ($lines as $line) {
+                            $line = str_replace("\n", "", $line);
+                            if (str_contains($line, "Application:")) {
+                                $appsli = explode("Application:", $line);
+                                $formatted .= trim($appsli[0]) . " Application:\n";
+                                $formatted .=  trim($appsli[1]) ;
+                            } 
+                            else {
+                                $line = str_replace(";", "", $line);
+                                $formatted .=  trim($line) . "\n";
+                            }
+                        }
+                        echo '
+                            <td>' . nl2br(trim($formatted)) . '</td>
+                        ';
+                        $formatted = "";
+                    
+                    @endphp 
+                </tr>
+            </tbody>
+        </table>
+        {{-- </div> --}}
+
+        @php
+            if(isset($acid_loving_crops_title) && !empty($acid_loving_crops_title)){
+                echo '
+                    <div class="footer-note">
+                        <b>' . $acid_loving_crops_title . ':</b> '. $acid_loving_crops_text .'
                     </div>
-                    <ul style="margin: 6px 0 8px 18px; padding: 0">
-                        <li>8 bags/ha (Organic Fertilizer)</li>
-                        <li>4.00 bags/ha (15-15-15)</li>
-                        <li>2.50 bags/ha (46-0-0)</li>
-                        <li>1.00 bag/ha (0-0-60)</li>
-                    </ul>
-                    <div style="font-weight: 700; margin-bottom: 6px">
-                        2nd Application
-                    </div>
-                    <ul style="margin: 6px 0 0 18px; padding: 0">
-                        <li>3.00 bags/ha (46-0-0)</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <!-- Mode of application -->
-        <div class="mode-app">MODE OF APPLICATION</div>
-        <div class="mode-box" role="region" aria-label="Mode of application">
-            <div style="font-weight: 700; margin-bottom: 8px">Cabbage</div>
-
-            <div style="font-weight: 700">1st Application:</div>
-            <div>
-                Apply the fertilizer including ½ of the nitrogen as a double band
-                10–12.5 cm on both sides of the row at 10 cm deep at planting.
-            </div>
-            <br />
-            <div style="font-weight: 700">2nd Application:</div>
-            <div>
-                Sidedress with remaining nitrogen fertilizer 10–14 days after planting
-                and/or a part of this may be applied 2 weeks before harvest.
-            </div>
-            <br />
-            <div style="font-weight: 700">Organic Fertilizer:</div>
-            <div>Apply 14 days to 1 month before planting.</div>
-        </div>
-
-        <div class="footer-note">
-            <b>Slightly Acid Loving Crops:</b> Preferred soil pH between 6.0 and
-            7.5. Use Urea (46-0-0) as a source of N. Do not mix lime with organic or
-            inorganic fertilizers.
-        </div>
+                ';
+            }
+        @endphp
 
         <div class="page-num">Page 1 of 1</div>
     </div>

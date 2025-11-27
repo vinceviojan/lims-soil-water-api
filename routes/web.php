@@ -7,4 +7,4 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/fert', [FertRightController::class, 'index']);
+Route::post('/fert', [FertRightController::class, 'generate']);
