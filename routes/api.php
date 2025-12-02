@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\CropsContoller;
 use App\Http\Controllers\Api\CropsFertRightController;
 use App\Http\Controllers\Api\FertRightResultController;
 use App\Http\Controllers\Api\LandscapeController;
+use App\Http\Controllers\Api\MaturityController;
 use App\Http\Controllers\Api\MslRstController;
 
 Route::get('/test', function () {
@@ -62,6 +63,16 @@ Route::prefix('fert-right')->group(function () {
     Route::get('/getLandscape', [FertRightResultController::class, 'getLandscape']);
     Route::get('/getAge', [FertRightResultController::class, 'getAge']);
     Route::post('/getFertRightResult', [FertRightResultController::class, 'getFertRightResult']);
+    Route::get('/getSoilType', [FertRightResultController::class, 'getSoilType']);
+    Route::get('/getCroppingSeason', [FertRightResultController::class, 'getCroppingSeason']);
+    // Route::get('/{id}', [AcidLovingCropController::class, 'show']);       
+    // Route::put('/{id}', [AcidLovingCropController::class, 'update']);     
+    // Route::delete('/{id}', [AcidLovingCropController::class, 'destroy']); 
+});
+
+Route::prefix('maturity')->group(function () {
+    Route::get('/', [MaturityController::class, 'index']);  
+    Route::post('/', [MaturityController::class, 'store']);  
     // Route::get('/{id}', [AcidLovingCropController::class, 'show']);       
     // Route::put('/{id}', [AcidLovingCropController::class, 'update']);     
     // Route::delete('/{id}', [AcidLovingCropController::class, 'destroy']); 

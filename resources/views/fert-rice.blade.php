@@ -13,6 +13,7 @@
 @php
     $decimal = floatval($ph);
     $formatted = number_format($decimal, 1, '.', '');
+    
 @endphp
 <body>
 
@@ -34,7 +35,7 @@
                     <td>{{ $nitro }}</td>
                     <td>{{ $phosphor }}</td>
                     <td>{{ $potass }}</td>
-                    <td>{{ $recordExists}}</td>
+                    <td>{{ $fertilizer_rate }}</td>
                 </tr>
             </tbody>
         </table>
@@ -51,13 +52,23 @@
                             echo "<th>Variety</th>";
                         }
 
+                        
+                        if(isset($age) && !empty($age)){
+                            echo "<th>Year/Age</th>";
+                        }
+
+                        if (isset($soil_type) && !empty($soil_type)) {
+                            echo "<th>Soil Type</th>";
+                        }
+
+                        if(isset($crop_season) && !empty($crop_season)){
+                            echo "<th>Cropping Season</th>";
+                        }
+
                         if (isset($landscape) && !empty($landscape)) {
                             echo "<th>Landscape</th>";
                         }
 
-                        if(isset($age) && !empty($age)){
-                            echo "<th>Year/Age</th>";
-                        }
 
                     @endphp
                 </tr>
@@ -69,13 +80,21 @@
                         if (isset($variety) && !empty($variety)) {
                             echo "<td>" . $variety . "</td>";
                         }
+                        
+                        if(isset($age) && !empty($age)){
+                            echo "<td>" . $age . "</td>";
+                        }
+
+                        if(isset($soil_type) && !empty($soil_type)){
+                            echo "<td>" . $soil_type . "</td>";
+                        }
+
+                        if(isset($crop_season) && !empty($crop_season)){
+                            echo "<td>" . $crop_season . "</td>";
+                        }
 
                         if (isset($landscape) && !empty($landscape)) {
                             echo "<td>" . $landscape . "</td>";
-                        }
-
-                        if(isset($age) && !empty($age)){
-                            echo "<td>" . $age . "</td>";
                         }
 
                     @endphp

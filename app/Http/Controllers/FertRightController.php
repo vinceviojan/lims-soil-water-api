@@ -48,6 +48,14 @@ class FertRightController extends Controller
             $query->where('age', $value['age']);
         }
 
+        if(isset($value["soil_type"]) && !empty($value["soil_type"])){
+            $query->where('soil_type', $value['soil_type']);
+        }
+
+        if(isset($value["crop_season"]) && !empty($value["crop_season"])){
+            $query->where('cropping_season', $value['crop_season']);
+        }
+
         $recordExists = $query
             ->where('om',  strtoupper(substr($msl->n, 0, 1)))
             ->where('p', strtoupper(substr($msl->p, 0, 1)))
@@ -82,6 +90,7 @@ class FertRightController extends Controller
                 'fertilizer_rate' => $fertilizer_rate,
                 'mode_of_application' => $recordExists[0]->mode_of_application,
                 'results' => $result,
+                'recordExists' => count($recordExists)
             ];
 
             if(isset($value['variety']) && !empty($value['variety'])){
@@ -96,6 +105,15 @@ class FertRightController extends Controller
                 $data['age'] = $value['age'];
             }
             
+            if(isset($value['soil_type']) && !empty($value['soil_type'])){
+                $data['soil_type'] = $value['soil_type'];
+            }
+
+            if(isset($value['crop_season']) && !empty($value['crop_season'])){
+                $data['crop_season'] = $value['crop_season'];
+            }
+
+
             if($acidLovingCrops){
                 $data['acid_loving_crops_title'] = $acidLovingCrops->category;
                 $text = "Preferred soil pH between " . $acidLovingCrops->min_ph . " and " . $acidLovingCrops->max_ph . ". ";
@@ -120,8 +138,16 @@ class FertRightController extends Controller
                 $data['acid_loving_crops_text'] = $text;
             }
 
+            // if($value["crop"] == "rice"){
+            //     $pdf = PDF::loadView("fert-rice", $data);
+            //     return $pdf->stream();
+            // }
+            // else{
+            //     $pdf = PDF::loadView("fert", $data);
+            //     return $pdf->stream();
+            // }
             $pdf = PDF::loadView("fert", $data);
-            return $pdf->stream();
+                return $pdf->stream();
         }
         else{
             return view("no_fert");

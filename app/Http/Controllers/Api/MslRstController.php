@@ -27,17 +27,29 @@ class MslRstController extends Controller
             'data' => $resp], 400);
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $msl = msl_rst::whereNotNull('latitude')->whereNotNull('longitude')
-            // ->limit(10)
-            ->get();
-        if($msl->isEmpty()){
+        $msl = msl_rst::whereNotNull('latitude')
+            ->whereNotNull('longitude');
+
+        if (isset($request["filter"]) && !empty($request["filter"])) {
+            $filter = $request["filter"]; // define filter
+
+            $msl->where(function ($query) use ($filter) {
+                $query->where('barangay', 'LIKE', "%{$filter}%")
+                    ->orWhere('municipality', 'LIKE', "%{$filter}%")
+                    ->orWhere('province', 'LIKE', "%{$filter}%");
+            });
+        }
+
+        $msl = $msl->get();
+
+        if ($msl->isEmpty()) {
             return $this->failed("", "No record found");
         }
-        else{
-            return $this->success($msl, "Retrieved successfully");
-        }
+
+        return $this->success($msl, "Retrieved successfully");
+
     }
 
     /**

@@ -256,7 +256,6 @@ class FertRightResultController extends Controller
 
     public function getAge(Request $request)
     {
-        $landscapesArray = [];
         $crop = crops::where('code', $request["crop"])->first();
 
         $tableName = strtolower($request["crop"] . '_fert_right');
@@ -271,6 +270,41 @@ class FertRightResultController extends Controller
         } else
             return $this->failed('', " no data.");
     }
+
+    public function getSoilType(Request $request)
+    {
+        $crop = crops::where('code', $request["crop"])->first();
+
+        $tableName = strtolower($request["crop"] . '_fert_right');
+        $recordExists = DB::table($tableName)
+            ->select('soil_type')
+            ->where('soil_type', '<>', 'N/A')
+            ->distinct()
+            ->get();
+
+        if ($recordExists->isNotEmpty()) {
+            return $this->success($recordExists, $crop["category"]);
+        } else
+            return $this->failed('', " no data.");
+    }
+
+    public function getCroppingSeason(Request $request)
+    {
+        $crop = crops::where('code', $request["crop"])->first();
+
+        $tableName = strtolower($request["crop"] . '_fert_right');
+        $recordExists = DB::table($tableName)
+            ->select('cropping_season')
+            ->where('cropping_season', '<>', 'N/A')
+            ->distinct()
+            ->get();
+
+        if ($recordExists->isNotEmpty()) {
+            return $this->success($recordExists, $crop["category"]);
+        } else
+            return $this->failed('', " no data.");
+    }
+
     public function getFertRightResult(Request $request)
     {
         $value = $request->all();
@@ -287,17 +321,17 @@ class FertRightResultController extends Controller
 
         $clean = preg_replace('/\s*\(.*?\)/', '', $crop->type);
         $clean = str_replace(' ', '_', $clean);
+
         if(!in_array(strtolower($clean), $cropsList)){
             $acidLovingCrops = acid_loving_crop::where('crops', 'LIKE', '%' . $clean . '%')
                 ->orWhere('crops',  $crop->code)
                 ->first();
         }
 
-
         $query = DB::table($tableName)->select('*');
 
         if(isset($value['variety']) && !empty($value['variety'])){
-            $query->where('variety', $value['variety']);
+            $query->where('variety', operator: $value['variety']);
         }
 
         if(isset($value['landscape']) && !empty($value['landscape'])){
@@ -306,6 +340,14 @@ class FertRightResultController extends Controller
 
         if(isset($value['age']) && !empty($value['age'])){
             $query->where('age', $value['age']);
+        }
+
+        if(isset($value["soil_type"]) && !empty($value["soil_type"])){
+            $query->where('soil_type', $value['soil_type']);
+        }
+
+        if(isset($value["crop_season"]) && !empty($value["crop_season"])){
+            $query->where('cropping_season', $value['crop_season']);
         }
 
         $recordExists = $query
@@ -355,6 +397,14 @@ class FertRightResultController extends Controller
                 $data['age'] = $value['age'];
             }
             
+            if(isset($value['soil_type']) && !empty($value['soil_type'])){
+                $data['soil_type'] = $value['soil_type'];
+            }
+
+            if(isset($value['crop_season']) && !empty($value['crop_season'])){
+                $data['crop_season'] = $value['crop_season'];
+            }
+
             if($acidLovingCrops){
                 $data['acid_loving_crops_title'] = $acidLovingCrops->category;
                 $text = "Preferred soil pH between " . $acidLovingCrops->min_ph . " and " . $acidLovingCrops->max_ph . ". ";
