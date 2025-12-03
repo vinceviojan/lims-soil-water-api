@@ -60,7 +60,7 @@ class FertRightController extends Controller
             ->where('om',  strtoupper(substr($msl->n, 0, 1)))
             ->where('p', strtoupper(substr($msl->p, 0, 1)))
             ->where('k', strtoupper(substr($msl->k, 0, 1)))
-            // ->where('is_7andBelow_ph', $isSevenBelow)
+            ->where('is_7andBelow_ph', $isSevenBelow)
             ->get();
 
         if( $recordExists->isNotEmpty() ) {
@@ -79,7 +79,6 @@ class FertRightController extends Controller
             else{
                 $fertilizer_rate = $recordExists[0]->nitrogen  . " - " . $recordExists[0]->phosphorus . " - " . $recordExists[0]->potassium;
             }
-
             
             $data = [
                 'crop' => strtoupper($crop->type),

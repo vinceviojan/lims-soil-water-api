@@ -34,7 +34,7 @@
                     <td>{{ $nitro }}</td>
                     <td>{{ $phosphor }}</td>
                     <td>{{ $potass }}</td>
-                    <td>{{ $recordExists}}</td>
+                    <td>{{ $fertilizer_rate}}</td>
                 </tr>
             </tbody>
         </table>
