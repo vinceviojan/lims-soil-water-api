@@ -32,16 +32,25 @@ class MslRstController extends Controller
         $msl = msl_rst::whereNotNull('latitude')
             ->whereNotNull('longitude');
 
-        if (isset($request["filter"]) && !empty($request["filter"])) {
-            $filter = $request["filter"]; // define filter
+        // if (isset($request["filter"]) && !empty($request["filter"])) {
+        //     $filter = $request["filter"]; // define filter
 
-            $msl->where(function ($query) use ($filter) {
-                $query->where('barangay', 'LIKE', "%{$filter}%")
-                    ->orWhere('municipality', 'LIKE', "%{$filter}%")
-                    ->orWhere('province', 'LIKE', "%{$filter}%");
-            });
+        //     $msl->where(function ($query) use ($filter) {
+        //         $query->where('barangay', 'LIKE', "%{$filter}%")
+        //             ->orWhere('municipality', 'LIKE', "%{$filter}%")
+        //             ->orWhere('province', 'LIKE', "%{$filter}%");
+        //     });
+        // }
+        if(isset($request["muni"]) && !empty($request["muni"])){
+            $provi = $request["provi"]; 
+            $msl->where('province', 'LIKE', "%{$provi}%");
         }
 
+        if(isset($request["muni"]) && !empty($request["muni"])){
+            $muni = $request["muni"]; 
+            $msl->where('municipality', 'LIKE', "%{$muni}%");
+        }
+        
         $msl = $msl->get();
 
         if ($msl->isEmpty()) {
@@ -143,6 +152,34 @@ class MslRstController extends Controller
                 ->get();
             
         if($msl->isEmpty()){
+            return $this->failed("", "No record found");
+        }
+        else{
+            return $this->success($msl, "Retrieved successfully");
+        }
+    }
+
+    public function getProvince(){
+        $msl = msl_rst::select('province')
+            ->distinct()
+            ->get();
+
+        if($msl->isEmpty()){
+            return $this->failed("", "No record found");
+        }
+        else{
+            return $this->success($msl, "Retrieved successfully");
+        }
+    }
+
+    public function getMunicipality(Request $request){
+        $value = $request->all();
+        $msl = msl_rst::select('municipality')
+            ->distinct()
+            ->where('province', $value["province"])
+            ->get();
+
+            if($msl->isEmpty()){
             return $this->failed("", "No record found");
         }
         else{

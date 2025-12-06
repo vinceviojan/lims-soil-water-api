@@ -51,6 +51,8 @@ Route::prefix('msl-rst')->group(function () {
     Route::get('/', [MslRstController::class, 'index']);   
     Route::post('/', [MslRstController::class, 'store']);  
     Route::get('/getYearList', [MslRstController::class, 'getYearList']);
+    Route::get('/getProvince', [MslRstController::class, 'getProvince']);
+    Route::get('/getMunicipality', [MslRstController::class, 'getMunicipality']);
     // Route::get('/{id}', [AcidLovingCropController::class, 'show']);       
     // Route::put('/{id}', [AcidLovingCropController::class, 'update']);     
     // Route::delete('/{id}', [AcidLovingCropController::class, 'destroy']); 
