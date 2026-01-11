@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\FertRightResultController;
 use App\Http\Controllers\Api\LandscapeController;
 use App\Http\Controllers\Api\MaturityController;
 use App\Http\Controllers\Api\MslRstController;
+use App\Http\Controllers\ExcelUploadController;
 
 Route::get('/test', function () {
     return response()->json(['message' => 'Web route working!']);
@@ -53,6 +54,7 @@ Route::prefix('msl-rst')->group(function () {
     Route::get('/getYearList', [MslRstController::class, 'getYearList']);
     Route::get('/getProvince', [MslRstController::class, 'getProvince']);
     Route::get('/getMunicipality', [MslRstController::class, 'getMunicipality']);
+    Route::get('/getBaranggay', [MslRstController::class, 'getBaranggay']);
     // Route::get('/{id}', [AcidLovingCropController::class, 'show']);       
     // Route::put('/{id}', [AcidLovingCropController::class, 'update']);     
     // Route::delete('/{id}', [AcidLovingCropController::class, 'destroy']); 
@@ -79,3 +81,5 @@ Route::prefix('maturity')->group(function () {
     // Route::put('/{id}', [AcidLovingCropController::class, 'update']);     
     // Route::delete('/{id}', [AcidLovingCropController::class, 'destroy']); 
 });
+
+Route::post('/upload-excel', [ExcelUploadController::class, 'upload']);

@@ -89,6 +89,7 @@ class FertRightController extends Controller
                 'fertilizer_rate' => $fertilizer_rate,
                 'mode_of_application' => $recordExists[0]->mode_of_application,
                 'results' => $result,
+                'location' => (isset($msl->barangay) && !empty($msl->barangay) ? $msl->barangay : "") . ", " . $msl->municipality . ", " . $msl->province ,
                 'recordExists' => count($recordExists)
             ];
 

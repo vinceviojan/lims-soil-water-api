@@ -97,6 +97,36 @@ body {
     font-weight: 700;
 }
 
+
+.summary-table-location{
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    /* margin-bottom: 5px; */
+}
+
+.summary-table-location th,
+.summary-table-location td {
+    border-top: 1px solid #000;
+    border-right: 1px solid #000;
+    border-bottom: 0;
+    border-left: 1px solid #000;
+
+    padding: 8px 10px;
+    text-align: center;
+    padding: 10px;
+    font-size: 13px;
+    /* line-height: 1.45; */
+}
+
+.summary-table-location th {
+    background: #eee;
+    padding: 8px 10px;
+    text-align: center;
+    font-weight: 700;
+}
+
+
 /* OPTIONS LAYOUT:
      Row 1: Option1 | Option2
      Row 2: (centered) Option3 (smaller width)

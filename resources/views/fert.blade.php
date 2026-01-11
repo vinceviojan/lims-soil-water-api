@@ -17,6 +17,9 @@
 <body>
 
     <div class="page" role="document" aria-label="Fertilizer Recommendation Result">
+        <div>
+            <p><b>Location: </b> {{ $location }}</p>
+        </div>
         <hr>
         <table class="summary-table" role="table" aria-label="Soil summary">
             <thead>

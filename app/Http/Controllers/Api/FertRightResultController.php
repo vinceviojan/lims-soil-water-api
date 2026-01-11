@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\DB;
 use App\Models\crops;
 use App\Models\msl_rst;
 use App\Models\acid_loving_crop;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\SoilImport;
 
 class FertRightResultController extends Controller
 {
@@ -434,5 +436,4 @@ class FertRightResultController extends Controller
             return $this->failed('', " no data.");
         }
     }
-    
 }

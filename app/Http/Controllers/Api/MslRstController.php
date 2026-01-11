@@ -32,25 +32,51 @@ class MslRstController extends Controller
         $msl = msl_rst::whereNotNull('latitude')
             ->whereNotNull('longitude');
 
-        // if (isset($request["filter"]) && !empty($request["filter"])) {
-        //     $filter = $request["filter"]; // define filter
+        if(isset($request["province"]) && !empty($request["province"])){
+            $getPro = DB::table("table_province")
+                ->select("province_name")
+                ->where("province_id", $request["provi"])
+                ->get();
 
-        //     $msl->where(function ($query) use ($filter) {
-        //         $query->where('barangay', 'LIKE', "%{$filter}%")
-        //             ->orWhere('municipality', 'LIKE', "%{$filter}%")
-        //             ->orWhere('province', 'LIKE', "%{$filter}%");
-        //     });
-        // }
-        if(isset($request["muni"]) && !empty($request["muni"])){
-            $provi = $request["provi"]; 
+            $provi = $getPro->province_name;
             $msl->where('province', 'LIKE', "%{$provi}%");
         }
 
         if(isset($request["muni"]) && !empty($request["muni"])){
-            $muni = $request["muni"]; 
+            $getMuni = DB::table("table_municipality")  
+                ->select("municipality_name")
+                ->where("municipality_id", $request["muni"])
+                ->first();
+
+            $muni = "";
+
+            if($getMuni->municipality_name == "City of Tarlac (Capital)"){
+                $muni = "Tarlac City";
+            }
+            else if($getMuni->municipality_name == "Balibago I" || $getMuni->municipality_name == "Balibago II"){
+                $muni = "Balibago";
+            }
+            else if($getMuni->municipality_name == "Nilasin 1st" || $getMuni->municipality_name == "Nilasin 2nd"){
+                $muni = "Nilasin";
+            }
+            else{   
+                $muni = $getMuni->municipality_name; 
+            }
+            
             $msl->where('municipality', 'LIKE', "%{$muni}%");
         }
         
+        if(isset($request["bara"]) && !empty($request["bara"])){
+            $getBara = DB::table("table_barangay")  
+                ->select("barangay_name")
+                ->where("barangay_id", $request["bara"])
+                ->first();
+
+            $bara = $getBara->barangay_name; 
+            $msl->where('barangay', 'LIKE', "%{$bara}%");
+        }
+        
+
         $msl = $msl->get();
 
         if ($msl->isEmpty()) {
@@ -160,8 +186,10 @@ class MslRstController extends Controller
     }
 
     public function getProvince(){
-        $msl = msl_rst::select('province')
-            ->distinct()
+        $msl = DB::table("table_province")
+            ->select('province_id', DB::raw('province_name AS province'))
+            ->where("status", "1")
+            ->orderBy('province_name', 'ASC')
             ->get();
 
         if($msl->isEmpty()){
@@ -174,12 +202,29 @@ class MslRstController extends Controller
 
     public function getMunicipality(Request $request){
         $value = $request->all();
-        $msl = msl_rst::select('municipality')
-            ->distinct()
-            ->where('province', $value["province"])
+        $msl = DB::table("table_municipality")
+            ->select('municipality_id', DB::raw('municipality_name AS municipality'))
+            ->where("province_id", $value["province"])
+            ->orderBy('municipality_name', 'ASC')
             ->get();
 
-            if($msl->isEmpty()){
+        if($msl->isEmpty()){
+            return $this->failed("", "No record found");
+        }
+        else{
+            return $this->success($msl, "Retrieved successfully");
+        }
+    }
+
+    public function getBaranggay(Request $request){
+        $value = $request->all();
+         $msl = DB::table("table_barangay")
+            ->select('barangay_id', DB::raw('barangay_name AS baranggay'))
+            ->where("municipality_id", $value["muni"])
+            ->orderBy('barangay_name', 'ASC')
+            ->get();
+
+        if($msl->isEmpty()){
             return $this->failed("", "No record found");
         }
         else{
