@@ -33,6 +33,7 @@ class ExcelUploadController extends Controller
     {
          $request->validate([
             'file' => 'required|mimes:xlsx,xls,csv|max:2048',
+            'name' => 'required|string|max:255',
         ]);
         
         $import = new SoilImport;
@@ -40,6 +41,19 @@ class ExcelUploadController extends Controller
 
         $data = $import->rows;
 
+        $data = array_values(array_filter($data, function ($row) {
+    // keep row only if at least ONE of these fields has a value
+            return !empty($row['year_of_sampling'])
+                || !empty($row['ph'])
+                || !empty($row['om'])
+                || !empty($row['p_bray'])
+                || !empty($row['p_olsen'])
+                || !empty($row['k'])
+                || !empty($row['barangay'])
+                || !empty($row['municipality'])
+                || !empty($row['province']);
+        }));
+        
         if (empty($data)) {
             return $this->failed(null, 'Excel file contains no data.');
         }
@@ -56,7 +70,7 @@ class ExcelUploadController extends Controller
             '*.shc_number' => 'nullable|string|max:100',
             '*.soil_texture' => 'nullable|string',
             '*.soil_ph_interpretation' => 'nullable|string',
-            '*.year_of_sampling' => 'nullable|numeric',
+            '*.year_of_sampling' => 'nullable|integer',
             '*.barangay' => 'nullable|string',
             '*.municipality' => 'nullable|string|max:100',
             '*.province' => 'nullable|string',
@@ -66,11 +80,13 @@ class ExcelUploadController extends Controller
             return $this->failed($validator->errors(), 'Failed to upload Excel file: ' );
         }
 
+
         $validated = $validator->validated();
 
         DB::beginTransaction();
         try {
             foreach ($validated as $data) {
+                $data['batch_code'] = $request->name;
                 $pro = DB::table('table_province')
                     ->where('province_name', 'LIKE',  '%'.$data['province'].'%')
                     ->first();

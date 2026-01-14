@@ -9,6 +9,13 @@ use App\Models\crops_fert_right;
 use Illuminate\Http\Request;
 use DateTime;
 use Illuminate\Support\Facades\DB;
+use App\Models\msl_test_result;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
+use App\Services\MslTestResultService;
+use App\Jobs\GeocodeMslAddressJob;
+use Illuminate\Support\Facades\Log;
+use App\Jobs\QualiInsertJob;
 
 class MslRstController extends Controller
 {
@@ -92,8 +99,6 @@ class MslRstController extends Controller
      */
     public function store(Request $request)
     {
-       
-
         $validated = $request->validate([
             '*.farm_area' => 'nullable|numeric',
             '*.longitude' => 'nullable|string|max:100',
@@ -111,8 +116,6 @@ class MslRstController extends Controller
             '*.province' => 'required|string',
             '*.crops' => 'nullable|string',
         ]);
-
-
 
         foreach ($validated as &$record) {
             $date = DateTime::createFromFormat('M, d, Y', $record['sampling_date']);
@@ -229,6 +232,185 @@ class MslRstController extends Controller
         }
         else{
             return $this->success($msl, "Retrieved successfully");
+        }
+    }
+
+    public function mslTestResult(Request $request, MslTestResultService $service)
+    {
+        $query = $service->fetchResults($request);
+        $data = [];
+
+        $query->chunk(200, function ($rows) use (&$data, $service) {
+
+            foreach ($rows as $row) {
+                // Dispatch geocoding only if missing
+                if(!empty($row->ph) && !empty($row->om) && (!empty($row->p_bray) || !empty($row->p_olsen)) && !empty($row->k)) {
+                    if (empty($row->latitude) || empty($row->longitude)) {
+                        GeocodeMslAddressJob::dispatch($row->id);
+                    }
+
+                    $kValue = is_numeric($row->k) ? ((float)$row->k * 391) : "";
+                    $pValue = is_numeric($row->p_bray) ? (float)$row->p_bray
+                        : (is_numeric($row->p_olsen) ? (float)$row->p_olsen : "");
+                    $pSymbol = is_numeric($row->p_bray) ? 'p_bray'
+                        : (is_numeric($row->p_olsen) ? 'p_olsen' : '');
+
+                    QualiInsertJob::dispatch($row->id);
+
+                    $data[] = [
+                        'id' => $row->id,
+                        'latitude' => $row->latitude,
+                        'longitude' => $row->longitude,
+                        'farm_area' => $row->farm_area, 
+                        'ph' => $row->ph,
+                        'n' => $service->getInterpretation('om', (float)$row->om),
+                        'p' => $service->getInterpretation($pSymbol, $pValue),
+                        'k' => $service->getInterpretation('k', $kValue),
+                        'n_value' => $row->om,
+                        'p_value' => empty($row->p_bray) ? $row->p_olsen
+                            : $row->p_bray,
+                        'k_value' => $kValue,
+                        'barangay' => $row->barangay,
+                        'municipality' => $row->municipality,
+                        'province' => $row->province,
+                    ];
+                }
+            }
+        });
+
+        if (empty($data)) {
+            return $this->failed(null, 'No record found');
+        }
+
+        return $this->success($data, 'Retrieved successfully');
+
+
+        // $msl = msl_test_result::where('status', 1);
+
+        // if(isset($request["provi"]) && !empty($request["provi"])){
+        //     $getPro = DB::table("table_province")
+        //         ->select("province_name")
+        //         ->where("province_id", $request["provi"])
+        //         ->first();
+
+        //     $provi = $getPro->province_name;
+        //     $msl->where('province', 'LIKE', "%{$provi}%");
+        // }
+
+        // if(isset($request["muni"]) && !empty($request["muni"])){
+        //     $getMuni = DB::table("table_municipality")  
+        //         ->select("municipality_name")
+        //         ->where("municipality_id", $request["muni"])
+        //         ->first();
+
+        //     $muni = "";
+
+        //     if($getMuni->municipality_name == "City of Tarlac (Capital)"){
+        //         $muni = "Tarlac City";
+        //     }
+        //     else{   
+        //         $muni = $getMuni->municipality_name; 
+        //     }
+            
+        //     $msl->where('municipality', 'LIKE', "%{$muni}%");
+        // }
+
+        // if(isset($request["bara"]) && !empty($request["bara"])){
+        //     $getBara = DB::table("table_barangay")  
+        //         ->select("barangay_name")
+        //         ->where("barangay_id", $request["bara"])
+        //         ->first();
+
+        //     $bara = $getBara->barangay_name; 
+        //     $msl->where('barangay', 'LIKE', "%{$bara}%");
+        // }
+        
+
+        // $msl = $msl->get();
+        
+        // $data = [];
+
+        // foreach($msl as $key => $value){
+        //     $om_interpretation = $this->getInterpretation('om', $value->om);
+        //     $p_interpretation = empty($value->p_bray) ? $this->getInterpretation('p_olsen', $value->p_olsen) : $this->getInterpretation('p_bray', $value->p_bray);
+            
+        //     $value_k = (int)$value->k * 391;
+            
+        //     $k_interpretation = $this->getInterpretation('k', $value_k);
+
+        //     $address = $value->barangay . ', ' . $value->municipality . ', ' . $value->province;
+
+        //     $cacheKey = 'osm_geocode_' . md5($address);
+
+        //     $result = Cache::remember($cacheKey, 86400, function () use ($address) {
+
+        //         $response = Http::withHeaders([
+        //                 // REQUIRED by Nominatim policy
+        //                 'User-Agent' => 'YourLaravelApp/1.0 (your@email.com)',
+        //             ])
+        //             ->get('https://nominatim.openstreetmap.org/search', [
+        //                 'q' => $address,
+        //                 'format' => 'json',
+        //                 'limit' => 1,
+        //             ]);
+
+        //         if (!$response->successful()) {
+        //             return null;
+        //         }
+
+        //         return $response->json();
+        //     });
+
+        //     if (!empty($result)) {
+
+        //         $data[] = [
+        //             'id' => $value->id,
+        //             'longitude' => $result[0]['lon'],
+        //             'latitude' => $result[0]['lat'],
+        //             'farm_area' => $value->farm_area,
+        //             'ph' => $value->ph,
+        //             'n' => $om_interpretation,
+        //             'p' => $p_interpretation,
+        //             'k' => $k_interpretation,
+        //             'n_value' => $value->om,
+        //             'p_value' => empty($value->p_bray) ? $value->p_olsen : $value->p_bray,
+        //             'k_value' => $value->k,
+        //             'shc_number' => $value->shc_number,
+        //             'soil_texture' => $value->soil_texture,
+        //             'soil_ph_interpretation' => $value->soil_ph_interpretation,
+        //             'year_of_sampling' => $value->year_of_sampling,
+        //             'barangay' => $value->barangay,
+        //             'municipality' => $value->municipality,
+        //             'province' => $value->province,
+        //         ];
+        //     }
+            
+        // }
+
+        // if ($data) {
+        //     return $this->failed("", "No record found");
+        // }
+
+        // return $this->success($msl, "Retrieved successfully");
+
+    }
+
+
+    public function getInterpretation($symbol, $value)
+    {
+        try {
+            $interpretation = DB::table('soil_interpretation')
+                ->where('symbol', 'om')
+                ->where('min', '<=', $value)
+                ->where(function ($q) use ($value) {
+                    $q->where('max', '>=', $value)
+                    ->orWhereNull('max');
+                })
+                ->value('interpretation');
+
+            return $interpretation ?? '';
+        } catch (\Throwable $th) {
+            //throw $th;
         }
     }
 

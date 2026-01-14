@@ -12,6 +12,9 @@ use App\Models\msl_rst;
 use App\Models\acid_loving_crop;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\SoilImport;
+use App\Models\msl_test_result;
+use Illuminate\Support\Facades\Log;
+use App\Services\MslTestResultService;
 
 class FertRightResultController extends Controller
 {
@@ -307,11 +310,12 @@ class FertRightResultController extends Controller
             return $this->failed('', " no data.");
     }
 
-    public function getFertRightResult(Request $request)
+    public function getFertRightResult(Request $request, MslTestResultService $service)
     {
         $value = $request->all();
         $tableName = strtolower($value["crop"] . '_fert_right');
-        $msl = msl_rst::where('id', $value['id'])->first();
+        // $msl = msl_rst::where('id', $value['id'])->first();
+        $msl = msl_test_result::where('id', $value['id'])->first();
         $crop = crops::where('type', '=', $value['crop'])
             ->orWhere("code",'=',$value['crop'])
             ->first();
@@ -352,10 +356,21 @@ class FertRightResultController extends Controller
             $query->where('cropping_season', $value['crop_season']);
         }
 
+        $omValue = is_numeric($msl->om) ? (float)$msl->om : "";
+        $kValue = is_numeric($msl->k) ? ((float)$msl->k * 391) : "";
+        $pValue = is_numeric($msl->p_bray) ? (float)$msl->p_bray
+            : (is_numeric($msl->p_olsen) ? (float)$msl->p_olsen : "");
+        $pSymbol = is_numeric($msl->p_bray) ? 'p_bray'
+            : (is_numeric($msl->p_olsen) ? 'p_olsen' : '');
+
+        $n =  $service->getInterpretation('om', (float)$omValue);
+        $p = $service->getInterpretation($pSymbol, $pValue);
+        $k = $service->getInterpretation('k', $kValue);
+
         $recordExists = $query
-            ->where('om',  strtoupper(substr($msl->n, 0, 1)))
-            ->where('p', strtoupper(substr($msl->p, 0, 1)))
-            ->where('k', strtoupper(substr($msl->k, 0, 1)))
+            ->where('om',  strtoupper(substr($n, 0, 1)))
+            ->where('p', strtoupper(substr($p, 0, 1)))
+            ->where('k', strtoupper(substr($k, 0, 1)))
             ->where('is_7andBelow_ph', $isSevenBelow)
             ->get();
 
@@ -436,4 +451,7 @@ class FertRightResultController extends Controller
             return $this->failed('', " no data.");
         }
     }
+
+   
+
 }

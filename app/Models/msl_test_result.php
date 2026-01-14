@@ -8,6 +8,8 @@ class msl_test_result extends Model
 {
     protected $table = 'msl_test_results';
 
+    public $timestamps = false; 
+
     protected $fillable = [
         'id',
         'longitude' ,
