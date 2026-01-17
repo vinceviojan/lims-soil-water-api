@@ -85,6 +85,10 @@ class MslTestResultService
                 $muni = 'Gapan';
             }
 
+            if($muni == 'Iba (Capital)'){
+                $muni = 'Iba';
+            }
+
             if ($muni) {
                 $query->where('municipality', 'LIKE', "%{$muni}%");
             }

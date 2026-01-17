@@ -28,5 +28,8 @@ class msl_test_result extends Model
         'municipality',
         'province',
         'status',
+        'n_qual',
+        'p_qual',
+        'k_qual',
     ];
 }

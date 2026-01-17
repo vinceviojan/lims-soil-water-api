@@ -8,18 +8,38 @@ use App\Models\acid_loving_crop;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
+use App\Models\msl_test_result;
+use App\Services\MslTestResultService;
 
 class FertRightController extends Controller
 {
-    public function generate(Request $request)
+    public function generate(Request $request, MslTestResultService $service)
     {
         $value = $request->all();
         $tableName = strtolower($value["crop"] . '_fert_right');
-        $msl = msl_rst::where('id', $value['id'])->first();
+        // $msl = msl_rst::where('id', $value['id'])->first();
+        $msl = msl_test_result::where('id', $value['id'])
+            ->whereNotNull('ph')
+            ->where(function ($q) {
+                    $q->whereNotNull('om')
+                    ->orWhereNotNull('n_qual');
+                })
+            ->where(function ($q) {
+                    $q->whereNotNull('p_bray')
+                    ->orWhereNotNull('p_olsen')
+                    ->orWhereNotNull('p_qual');
+                })
+            ->where(function ($q) {
+                    $q->whereNotNull('k_qual')
+                    ->orWhereNotNull('k');
+                })
+            ->first();
+
         $crop = crops::where('type', '=', $value['crop'])
             ->orWhere("code",'=',$value['crop'])
             ->first();
-        
+
+
         $result = [];
         $cropsList = ["apple", "pepper"];
         $acidLovingCrops = null;
@@ -56,10 +76,21 @@ class FertRightController extends Controller
             $query->where('cropping_season', $value['crop_season']);
         }
 
+        $omValue = is_numeric($msl->om) ? (float)$msl->om : "";
+        $kValue = is_numeric($msl->k) ? ((float)$msl->k * 391) : "";
+        $pValue = is_numeric($msl->p_bray) ? (float)$msl->p_bray
+            : (is_numeric($msl->p_olsen) ? (float)$msl->p_olsen : "");
+        $pSymbol = is_numeric($msl->p_bray) ? 'p_bray'
+            : (is_numeric($msl->p_olsen) ? 'p_olsen' : '');
+
+        $n = $omValue ? $service->getInterpretation('om', (float)$omValue) : ($msl->n_qual ? $msl->n_qual : '');
+        $p = $pValue ?  $service->getInterpretation($pSymbol, $pValue) : ($msl->p_qual ? $msl->p_qual : '');
+        $k = $kValue ? $service->getInterpretation('k', $kValue) : ($msl->k_qual ? $msl->k_qual : '');
+
         $recordExists = $query
-            ->where('om',  strtoupper(substr($msl->n, 0, 1)))
-            ->where('p', strtoupper(substr($msl->p, 0, 1)))
-            ->where('k', strtoupper(substr($msl->k, 0, 1)))
+            ->where('om',  strtoupper(substr($n, 0, 1)))
+            ->where('p', strtoupper(substr($p, 0, 1)))
+            ->where('k', strtoupper(substr($k, 0, 1)))
             ->where('is_7andBelow_ph', $isSevenBelow)
             ->get();
 

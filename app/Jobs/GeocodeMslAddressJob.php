@@ -16,6 +16,8 @@ class GeocodeMslAddressJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    // public $queue = 'geocode';
+
     /**
      * Create a new job instance.
      */
@@ -29,7 +31,7 @@ class GeocodeMslAddressJob implements ShouldQueue
      */
     public function handle(): void
     {
-        //Log::info('Geocode job started', ['id' => $this->mslId]);
+        Log::info('Geocode job started', ['id' => $this->mslId]);
 
         $msl = msl_test_result::find($this->mslId);
         if (!$msl) return;
@@ -67,9 +69,9 @@ class GeocodeMslAddressJob implements ShouldQueue
         $msl->longitude = $data[0]['lon'];
         $msl->save();
 
-        // Log::info('Geocode saved', [
-        //     'lat' => $data[0]['lat'],
-        //     'lon' => $data[0]['lon'],
-        // ]);
+        Log::info('Geocode saved', [
+            'lat' => $data[0]['lat'],
+            'lon' => $data[0]['lon'],
+        ]);
     }
 }

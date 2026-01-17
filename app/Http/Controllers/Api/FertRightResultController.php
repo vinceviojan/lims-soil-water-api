@@ -315,7 +315,27 @@ class FertRightResultController extends Controller
         $value = $request->all();
         $tableName = strtolower($value["crop"] . '_fert_right');
         // $msl = msl_rst::where('id', $value['id'])->first();
-        $msl = msl_test_result::where('id', $value['id'])->first();
+        $msl = msl_test_result::where('id', $value['id'])
+            ->whereNotNull('ph')
+            ->where(function ($q) {
+                    $q->whereNotNull('om')
+                    ->orWhereNotNull('n_qual');
+                })
+            ->where(function ($q) {
+                    $q->whereNotNull('p_bray')
+                    ->orWhereNotNull('p_olsen')
+                    ->orWhereNotNull('p_qual');
+                })
+            ->where(function ($q) {
+                    $q->whereNotNull('k_qual')
+                    ->orWhereNotNull('k');
+                })
+            ->first();
+
+        if(!$msl){
+            return $this->failed($msl, "No Fertilizer Recommendation Available");
+        }
+
         $crop = crops::where('type', '=', $value['crop'])
             ->orWhere("code",'=',$value['crop'])
             ->first();
@@ -363,9 +383,9 @@ class FertRightResultController extends Controller
         $pSymbol = is_numeric($msl->p_bray) ? 'p_bray'
             : (is_numeric($msl->p_olsen) ? 'p_olsen' : '');
 
-        $n =  $service->getInterpretation('om', (float)$omValue);
-        $p = $service->getInterpretation($pSymbol, $pValue);
-        $k = $service->getInterpretation('k', $kValue);
+        $n = $omValue ? $service->getInterpretation('om', (float)$omValue) : ($msl->n_qual ? $msl->n_qual : '');
+        $p = $pValue ?  $service->getInterpretation($pSymbol, $pValue) : ($msl->p_qual ? $msl->p_qual : '');
+        $k = $kValue ? $service->getInterpretation('k', $kValue) : ($msl->k_qual ? $msl->k_qual : '');
 
         $recordExists = $query
             ->where('om',  strtoupper(substr($n, 0, 1)))

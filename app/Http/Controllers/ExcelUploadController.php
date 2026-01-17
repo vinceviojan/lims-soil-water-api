@@ -8,6 +8,7 @@ use App\Imports\SoilImport;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use App\Models\msl_test_result;
+use App\Services\MslTestResultService;
 
 class ExcelUploadController extends Controller
 {
@@ -29,7 +30,7 @@ class ExcelUploadController extends Controller
         ], 400);
     }
 
-    public function upload(Request $request)
+    public function upload(Request $request, MslTestResultService $service)
     {
          $request->validate([
             'file' => 'required|mimes:xlsx,xls,csv|max:2048',
@@ -74,6 +75,9 @@ class ExcelUploadController extends Controller
             '*.barangay' => 'nullable|string',
             '*.municipality' => 'nullable|string|max:100',
             '*.province' => 'nullable|string',
+            '*.n_qual' => 'nullable|string',
+            '*.p_qual' => 'nullable|string',
+            '*.k_qual' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -86,6 +90,56 @@ class ExcelUploadController extends Controller
         DB::beginTransaction();
         try {
             foreach ($validated as $data) {
+                $value = ""    ;
+                $kValue = is_numeric($data['k']) ? ((float)$data['k'] * 391) : null;
+
+                if(empty($data['om'])){
+                    if(empty($data['n_qual'])){
+                        $data['n_qual'] = null;
+                    }
+                    else{
+                        $data['n_qual'] = trim($data['n_qual']);
+                    }
+                }
+                else {
+                    $n_qual = $service->getInterpretation('om', $data['om']);
+                    $data['n_qual'] = $n_qual;
+                }
+
+                if (isset($data['p_bray'])) {
+                    $key = 'p_bray';
+                    $value = $data['p_bray'];
+                } elseif (isset($data['p_olsen'])) {
+                    $key = 'p_olsen';
+                    $value = $data['p_olsen'];
+                } 
+
+                if(empty($value)){
+                    if(empty($data['p_qual'])){
+                        $data['p_qual'] = null;
+                    }
+                    else{
+                        $data['p_qual'] = trim($data['p_qual']);
+                    }
+                }
+                else{
+                    $p_qual = $service->getInterpretation($key, $value);
+                    $data['p_qual'] = $p_qual;
+                }
+
+                if (empty($msl->k)) {
+                    if(empty($data['k_qual'])){
+                        $data['k_qual'] = null;
+                    }
+                    else{
+                        $data['k_qual'] = trim($data['k_qual']);
+                    }
+                }
+                else {
+                    $k_qual = $service->getInterpretation('k', $kValue);
+                    $data['k_qual'] = $k_qual;
+                }
+
                 $data['batch_code'] = $request->name;
                 $pro = DB::table('table_province')
                     ->where('province_name', 'LIKE',  '%'.$data['province'].'%')

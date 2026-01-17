@@ -78,8 +78,22 @@ class MslRstController extends Controller
                 ->select("barangay_name")
                 ->where("barangay_id", $request["bara"])
                 ->first();
+            
+            $bara ="";
 
-            $bara = $getBara->barangay_name; 
+            if($getBara->barangay_name == "Luna (Pob.)"){
+                $bara = "Luna";
+            }
+            else if($getBara->barangay_name == "La Paz (Pob.)"){
+                $bara = "La Paz";
+            }
+            else if($getBara->barangay_name == "San Roque (Pob.)"){
+                $bara = "San Roque";
+            }
+            else{
+                $bara = $getBara->barangay_name; 
+            }
+
             $msl->where('barangay', 'LIKE', "%{$bara}%");
         }
         
@@ -241,40 +255,39 @@ class MslRstController extends Controller
         $data = [];
 
         $query->chunk(200, function ($rows) use (&$data, $service) {
-
             foreach ($rows as $row) {
                 // Dispatch geocoding only if missing
-                if(!empty($row->ph) && !empty($row->om) && (!empty($row->p_bray) || !empty($row->p_olsen)) && !empty($row->k)) {
-                    if (empty($row->latitude) || empty($row->longitude)) {
-                        GeocodeMslAddressJob::dispatch($row->id);
-                    }
-
-                    $kValue = is_numeric($row->k) ? ((float)$row->k * 391) : "";
-                    $pValue = is_numeric($row->p_bray) ? (float)$row->p_bray
-                        : (is_numeric($row->p_olsen) ? (float)$row->p_olsen : "");
-                    $pSymbol = is_numeric($row->p_bray) ? 'p_bray'
-                        : (is_numeric($row->p_olsen) ? 'p_olsen' : '');
-
-                    QualiInsertJob::dispatch($row->id);
-
-                    $data[] = [
-                        'id' => $row->id,
-                        'latitude' => $row->latitude,
-                        'longitude' => $row->longitude,
-                        'farm_area' => $row->farm_area, 
-                        'ph' => $row->ph,
-                        'n' => $service->getInterpretation('om', (float)$row->om),
-                        'p' => $service->getInterpretation($pSymbol, $pValue),
-                        'k' => $service->getInterpretation('k', $kValue),
-                        'n_value' => $row->om,
-                        'p_value' => empty($row->p_bray) ? $row->p_olsen
-                            : $row->p_bray,
-                        'k_value' => $kValue,
-                        'barangay' => $row->barangay,
-                        'municipality' => $row->municipality,
-                        'province' => $row->province,
-                    ];
+                if (empty($row->latitude) || empty($row->longitude)) {
+                    GeocodeMslAddressJob::dispatch($row->id)->onQueue('geocode');
+                    // GeocodeMslAddressJob::dispatch($row->id);
                 }
+
+                $kValue = is_numeric($row->k) ? ((float)$row->k * 391) : "";
+                $pValue = is_numeric($row->p_bray) ? (float)$row->p_bray
+                    : (is_numeric($row->p_olsen) ? (float)$row->p_olsen : "");
+                $pSymbol = is_numeric($row->p_bray) ? 'p_bray'
+                    : (is_numeric($row->p_olsen) ? 'p_olsen' : '');
+
+                QualiInsertJob::dispatch($row->id)->onQueue('qualitative');
+                // QualiInsertJob::dispatch($row->id);
+
+                $data[] = [
+                    'id' => $row->id,
+                    'latitude' => $row->latitude,
+                    'longitude' => $row->longitude,
+                    'farm_area' => $row->farm_area, 
+                    'ph' => $row->ph,
+                    'n' => $row->om ? $service->getInterpretation('om', (float)$row->om) : ($row->n_qual ? $row->n_qual : ''),
+                    'p' => $pValue ? $service->getInterpretation($pSymbol, $pValue) : ($row->p_qual ? $row->p_qual : ''),
+                    'k' => $kValue ? $service->getInterpretation('k', $kValue) : ($row->k_qual ? $row->k_qual : ''),
+                    'n_value' => $row->om,
+                    'p_value' => empty($row->p_bray) ? $row->p_olsen
+                        : $row->p_bray,
+                    'k_value' => $kValue,
+                    'barangay' => $row->barangay,
+                    'municipality' => $row->municipality,
+                    'province' => $row->province,
+                ];
             }
         });
 
@@ -283,115 +296,6 @@ class MslRstController extends Controller
         }
 
         return $this->success($data, 'Retrieved successfully');
-
-
-        // $msl = msl_test_result::where('status', 1);
-
-        // if(isset($request["provi"]) && !empty($request["provi"])){
-        //     $getPro = DB::table("table_province")
-        //         ->select("province_name")
-        //         ->where("province_id", $request["provi"])
-        //         ->first();
-
-        //     $provi = $getPro->province_name;
-        //     $msl->where('province', 'LIKE', "%{$provi}%");
-        // }
-
-        // if(isset($request["muni"]) && !empty($request["muni"])){
-        //     $getMuni = DB::table("table_municipality")  
-        //         ->select("municipality_name")
-        //         ->where("municipality_id", $request["muni"])
-        //         ->first();
-
-        //     $muni = "";
-
-        //     if($getMuni->municipality_name == "City of Tarlac (Capital)"){
-        //         $muni = "Tarlac City";
-        //     }
-        //     else{   
-        //         $muni = $getMuni->municipality_name; 
-        //     }
-            
-        //     $msl->where('municipality', 'LIKE', "%{$muni}%");
-        // }
-
-        // if(isset($request["bara"]) && !empty($request["bara"])){
-        //     $getBara = DB::table("table_barangay")  
-        //         ->select("barangay_name")
-        //         ->where("barangay_id", $request["bara"])
-        //         ->first();
-
-        //     $bara = $getBara->barangay_name; 
-        //     $msl->where('barangay', 'LIKE', "%{$bara}%");
-        // }
-        
-
-        // $msl = $msl->get();
-        
-        // $data = [];
-
-        // foreach($msl as $key => $value){
-        //     $om_interpretation = $this->getInterpretation('om', $value->om);
-        //     $p_interpretation = empty($value->p_bray) ? $this->getInterpretation('p_olsen', $value->p_olsen) : $this->getInterpretation('p_bray', $value->p_bray);
-            
-        //     $value_k = (int)$value->k * 391;
-            
-        //     $k_interpretation = $this->getInterpretation('k', $value_k);
-
-        //     $address = $value->barangay . ', ' . $value->municipality . ', ' . $value->province;
-
-        //     $cacheKey = 'osm_geocode_' . md5($address);
-
-        //     $result = Cache::remember($cacheKey, 86400, function () use ($address) {
-
-        //         $response = Http::withHeaders([
-        //                 // REQUIRED by Nominatim policy
-        //                 'User-Agent' => 'YourLaravelApp/1.0 (your@email.com)',
-        //             ])
-        //             ->get('https://nominatim.openstreetmap.org/search', [
-        //                 'q' => $address,
-        //                 'format' => 'json',
-        //                 'limit' => 1,
-        //             ]);
-
-        //         if (!$response->successful()) {
-        //             return null;
-        //         }
-
-        //         return $response->json();
-        //     });
-
-        //     if (!empty($result)) {
-
-        //         $data[] = [
-        //             'id' => $value->id,
-        //             'longitude' => $result[0]['lon'],
-        //             'latitude' => $result[0]['lat'],
-        //             'farm_area' => $value->farm_area,
-        //             'ph' => $value->ph,
-        //             'n' => $om_interpretation,
-        //             'p' => $p_interpretation,
-        //             'k' => $k_interpretation,
-        //             'n_value' => $value->om,
-        //             'p_value' => empty($value->p_bray) ? $value->p_olsen : $value->p_bray,
-        //             'k_value' => $value->k,
-        //             'shc_number' => $value->shc_number,
-        //             'soil_texture' => $value->soil_texture,
-        //             'soil_ph_interpretation' => $value->soil_ph_interpretation,
-        //             'year_of_sampling' => $value->year_of_sampling,
-        //             'barangay' => $value->barangay,
-        //             'municipality' => $value->municipality,
-        //             'province' => $value->province,
-        //         ];
-        //     }
-            
-        // }
-
-        // if ($data) {
-        //     return $this->failed("", "No record found");
-        // }
-
-        // return $this->success($msl, "Retrieved successfully");
 
     }
 
