@@ -90,18 +90,25 @@ class MslRstController extends Controller
             else if($getBara->barangay_name == "San Roque (Pob.)"){
                 $bara = "San Roque";
             }
+            else if($getBara->barangay_name == "Tampo (Pob.)"){
+                $bara = "Tampo";
+            }
             else{
                 $bara = $getBara->barangay_name; 
             }
 
             $msl->where('barangay', 'LIKE', "%{$bara}%");
         }
-        
+        $data [] = [
+            'province' => $provi,
+            'municipality' => $muni,
+            'barangay' => $bara,
+        ];
 
         $msl = $msl->get();
 
         if ($msl->isEmpty()) {
-            return $this->failed("", "No record found");
+            return $this->failed($data, "No record found");
         }
 
         return $this->success($msl, "Retrieved successfully");

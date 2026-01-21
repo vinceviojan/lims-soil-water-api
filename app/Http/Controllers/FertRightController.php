@@ -114,9 +114,9 @@ class FertRightController extends Controller
             $data = [
                 'crop' => strtoupper($crop->type),
                 'ph' => $msl->ph,
-                'nitro' => $msl->n,
-                'phosphor' => $msl->p,
-                'potass' => $msl->k,
+                'nitro' => $msl->n_qual,
+                'phosphor' => $msl->p_qual,
+                'potass' => $msl->k_qual,
                 'fertilizer_rate' => $fertilizer_rate,
                 'mode_of_application' => $recordExists[0]->mode_of_application,
                 'results' => $result,

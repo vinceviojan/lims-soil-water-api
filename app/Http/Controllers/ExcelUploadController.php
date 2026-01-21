@@ -145,21 +145,26 @@ class ExcelUploadController extends Controller
                     ->where('province_name', 'LIKE',  '%'.$data['province'].'%')
                     ->first();
 
-                $pid = $pro->province_id;
+                if($pro){
+                    $pid = $pro->province_id;
 
-                $muni = DB::table('table_municipality')
-                    ->where('municipality_name', 'LIKE',  '%'.$data['municipality'].'%')
-                    ->where('province_id', $pid)
-                    ->first();
-                
-                if($muni){
-                    $mid = $muni->municipality_id;
-
-                    $bara = DB::table('table_barangay')
-                        ->where('barangay_name', 'LIKE',  '%'.$data['barangay'].'%')
-                        ->where('municipality_id', $mid)
+                    $muni = DB::table('table_municipality')
+                        ->where('municipality_name', 'LIKE',  '%'.$data['municipality'].'%')
+                        ->where('province_id', $pid)
                         ->first();
-                    if($bara){}
+                    
+                    if($muni){
+                        $mid = $muni->municipality_id;
+
+                        $bara = DB::table('table_barangay')
+                            ->where('barangay_name', 'LIKE',  '%'.$data['barangay'].'%')
+                            ->where('municipality_id', $mid)
+                            ->first();
+                        if($bara){}
+                        else{
+                            $data['status'] = 0;
+                        }
+                    }
                     else{
                         $data['status'] = 0;
                     }

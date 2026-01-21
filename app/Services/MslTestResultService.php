@@ -62,18 +62,23 @@ class MslTestResultService
                 ->where('municipality_id', $request->muni)
                 ->value('municipality_name');
 
-            if ($muni === 'City of Tarlac (Capital)') {
+            Log::info('Geocode job started', ['muni' => $muni]);
+
+            if (str_contains('City of Tarlac', $muni) or $muni ==='City of Tarlac') {
                 $muni = 'Tarlac City';
             }
-
-            if($muni === 'Iba (Capital)'){
-                $muni = 'Iba';
+            if (str_contains($muni, 'Baler' )) {
+                $muni = 'Baler';
+                
             }
-
+            
             if($muni === 'City of Valencia'){
                 $muni = 'Valencia City';
             }
-            if($muni === 'City of Palayan (Capital)'){
+            if(str_contains('City of Palayan', $muni) or $muni ==='City of Palayan'){
+                $muni = 'Palayan City';
+            }
+            if(str_contains('City of Balanga', $muni) or $muni ==='City of Balanga'){
                 $muni = 'Palayan City';
             }
 
@@ -85,7 +90,7 @@ class MslTestResultService
                 $muni = 'Gapan';
             }
 
-            if($muni == 'Iba (Capital)'){
+            if(str_contains('Iba', $muni)){
                 $muni = 'Iba';
             }
 
@@ -98,9 +103,26 @@ class MslTestResultService
             $barangay = DB::table('table_barangay')
                 ->where('barangay_id', $request->bara)
                 ->value('barangay_name');
+            $bara ="";
+
+            if(str_contains('Luna', $barangay) or $barangay == 'Luna (Pob.)'){
+                $bara = "Luna";
+            }
+            else if(str_contains('La Paz', $barangay) or $barangay == "La Paz (Pob.)"){
+                $bara = "La Paz";
+            }
+            else if(str_contains('San Roque', $barangay) or $barangay == "San Roque (Pob.)"){
+                $bara = "San Roque";
+            }
+            else if(str_contains('Tampo', $barangay) or $barangay == "Tampo (Pob.)"){
+                $bara = "Tampo";
+            }
+            else{
+                $bara = $barangay; 
+            }
 
             if ($barangay) {
-                $query->where('barangay', 'LIKE', "%{$barangay}%");
+                $query->where('barangay', 'LIKE', "%{$bara}%");
             }
         }
 
