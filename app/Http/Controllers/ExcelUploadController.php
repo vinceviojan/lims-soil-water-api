@@ -41,7 +41,6 @@ class ExcelUploadController extends Controller
         Excel::import($import, $request->file('file'));
 
         $data = $import->rows;
-
         $data = array_values(array_filter($data, function ($row) {
     // keep row only if at least ONE of these fields has a value
             return !empty($row['year_of_sampling'])

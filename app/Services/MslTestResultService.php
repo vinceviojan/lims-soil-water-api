@@ -69,17 +69,19 @@ class MslTestResultService
             }
             if (str_contains($muni, 'Baler' )) {
                 $muni = 'Baler';
-                
             }
-            
+            if(str_contains($muni, "Tabuk")){
+                $muni = 'Tabuk';
+            }   
+
             if($muni === 'City of Valencia'){
                 $muni = 'Valencia City';
             }
-            if(str_contains('City of Palayan', $muni) or $muni ==='City of Palayan'){
-                $muni = 'Palayan City';
+            if(str_contains($muni, 'Palayan')){
+                $muni = 'Palayan';
             }
-            if(str_contains('City of Balanga', $muni) or $muni ==='City of Balanga'){
-                $muni = 'Palayan City';
+            if(str_contains($muni, 'Balanga')){
+                $muni = 'Balanga City';
             }
 
             if($muni === 'City of Cabanatuan'){
@@ -116,6 +118,15 @@ class MslTestResultService
             }
             else if(str_contains('Tampo', $barangay) or $barangay == "Tampo (Pob.)"){
                 $bara = "Tampo";
+            }
+            else if(str_contains($barangay, 'Tenejero') or $barangay == "Tenejero (Pob.)"){
+                $bara = "Tenejero";
+            }
+            else if(str_contains($barangay, 'Cabaducan')){
+                $bara = "Cabaducan";
+            }
+            else if(str_contains($barangay, 'Rizal')){
+                $bara = "Rizal";
             }
             else{
                 $bara = $barangay; 

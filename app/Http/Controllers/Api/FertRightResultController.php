@@ -15,6 +15,8 @@ use App\Imports\SoilImport;
 use App\Models\msl_test_result;
 use Illuminate\Support\Facades\Log;
 use App\Services\MslTestResultService;
+use App\Models\maturity;
+use Carbon\Carbon;
 
 class FertRightResultController extends Controller
 {
@@ -409,7 +411,6 @@ class FertRightResultController extends Controller
             else{
                 $fertilizer_rate = $recordExists[0]->nitrogen  . " - " . $recordExists[0]->phosphorus . " - " . $recordExists[0]->potassium;
             }
-
             
             $data = [
                 'crop' => strtoupper($crop->type),
@@ -440,6 +441,74 @@ class FertRightResultController extends Controller
 
             if(isset($value['crop_season']) && !empty($value['crop_season'])){
                 $data['crop_season'] = $value['crop_season'];
+            }
+
+            if($value["crop"] == "rice"){
+                $maturity = maturity::where('code', '=', $value['maturity'])->first();
+                $mat = explode('/', $maturity->date_range);
+                $fApp = explode('-', $mat[0]);
+                $sApp = explode('-', $mat[1]);
+                $tApp = explode('-', $mat[2]);
+                $firstApp = ""; $secondApp = ""; $thirdApp = "";
+                if(Carbon::now()->addDays((int)$fApp[0])->format('F') == Carbon::now()->addDays((int)$fApp[1])->format('F')){
+                    $firstApp = Carbon::now()->addDays((int)$fApp[0])->format('F d') . "-" . Carbon::now()->addDays((int)$fApp[1])->format('d');
+                }
+                else{
+                    $firstApp = Carbon::now()->addDays((int)$fApp[0])->format('F d') . " to " . Carbon::now()->addDays((int)$fApp[1])->format('F d');
+                }
+
+                if(Carbon::now()->addDays((int)$sApp[0])->format('F') == Carbon::now()->addDays((int)$sApp[1])->format('F')){
+                    $secondApp = Carbon::now()->addDays((int)$sApp[0])->format('F d') . "-" . Carbon::now()->addDays((int)$sApp[1])->format('d');
+                }
+                else{
+                    $secondApp = Carbon::now()->addDays((int)$sApp[0])->format('F d') . " to " . Carbon::now()->addDays((int)$sApp[1])->format('F d');
+                }
+
+                if(Carbon::now()->addDays((int)$tApp[0])->format('F') == Carbon::now()->addDays((int)$tApp[1])->format('F')){
+                    $thirdApp = Carbon::now()->addDays((int)$tApp[0])->format('F d') . "-" . Carbon::now()->addDays((int)$tApp[1])->format('d');
+                }
+                else{
+                    $thirdApp = Carbon::now()->addDays((int)$tApp[0])->format('F d') . " to " . Carbon::now()->addDays((int)$tApp[1])->format('F d');
+                }
+
+
+                $formatted = "";
+                $lines = explode("\n", $recordExists[0]->mode_of_application);
+                foreach ($lines as $line) {
+                    $line = str_replace("\n", "", $line);
+                    if(str_contains($line, "Planting)")){
+                        $line .= "\n\nBEFORE PLANTING\nApply at least 10 bags of organic materials such as Organic Fertilizer/Compost/Dried Animal Manure at 14 days to 1 month before planting or during land preparation.\n\nAFTER PLANTING";
+                        $formatted .=  trim($line);
+                    }
+                    else if (str_contains($line, "Application:")) {
+                        // if (preg_match('/([\d.]+\s*bag[s]?)(?:\/ha)?\s*\(organic fertilizer\)/i', $line, $matches)) {
+                        //     $organicValue = $matches[1];
+                        //     $organic = preg_replace('/^Apply\s*/i', '', $organic);
+                        //     $organic = str_replace('.', '', $organicValue);
+                        // }
+                        
+                        // if (preg_match('/Organic Fertilizer\s*(.+)$/is', $line, $matches)) {
+                        //     $organic = preg_replace('/^Organic Fertilizer\s*/i', '', trim($matches[0]));
+                        // }
+                        $appsli = explode("Application:", $line);
+                        if(trim($appsli[0]) == "1st"){
+                            $formatted .= trim($appsli[0]) . " Application: (" . $firstApp . ")\n\n";
+                        }
+                        else if(trim($appsli[0]) == "2nd"){
+                            $formatted .= trim($appsli[0]) . " Application: (" . $secondApp . ")\n\n";
+                        }
+                        else if(trim($appsli[0]) == "3rd"){
+                            $formatted .= trim($appsli[0]) . " Application: (" . $thirdApp . ")\n\n";
+                        }
+                        
+                        $formatted .=  trim($appsli[1]) ;
+                    } 
+                    else {
+                        $line = str_replace(";", "", $line);
+                        $formatted .=  trim($line) . "\n";
+                    }
+                }
+                $data['mode_of_application'] = $formatted;
             }
 
             if($acidLovingCrops){

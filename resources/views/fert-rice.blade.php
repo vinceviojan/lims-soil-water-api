@@ -13,11 +13,13 @@
 @php
     $decimal = floatval($ph);
     $formatted = number_format($decimal, 1, '.', '');
-    
 @endphp
 <body>
 
     <div class="page" role="document" aria-label="Fertilizer Recommendation Result">
+        <div>
+            <p><b>Location: </b> {{ $location }}</p>
+        </div>
         <hr>
         <table class="summary-table" role="table" aria-label="Soil summary">
             <thead>
@@ -35,7 +37,7 @@
                     <td>{{ $nitro }}</td>
                     <td>{{ $phosphor }}</td>
                     <td>{{ $potass }}</td>
-                    <td>{{ $fertilizer_rate }}</td>
+                    <td>{{ $fertilizer_rate}}</td>
                 </tr>
             </tbody>
         </table>
@@ -52,15 +54,10 @@
                             echo "<th>Variety</th>";
                         }
 
-                        
-                        if(isset($age) && !empty($age)){
-                            echo "<th>Year/Age</th>";
-                        }
-
-                        if (isset($soil_type) && !empty($soil_type)) {
+                        if(isset($soil_type) && !empty($soil_type)){
                             echo "<th>Soil Type</th>";
                         }
-
+                        
                         if(isset($crop_season) && !empty($crop_season)){
                             echo "<th>Cropping Season</th>";
                         }
@@ -69,6 +66,9 @@
                             echo "<th>Landscape</th>";
                         }
 
+                        if(isset($age) && !empty($age)){
+                            echo "<th>Year/Age</th>";
+                        }
 
                     @endphp
                 </tr>
@@ -80,21 +80,21 @@
                         if (isset($variety) && !empty($variety)) {
                             echo "<td>" . $variety . "</td>";
                         }
-                        
-                        if(isset($age) && !empty($age)){
-                            echo "<td>" . $age . "</td>";
-                        }
 
                         if(isset($soil_type) && !empty($soil_type)){
-                            echo "<td>" . $soil_type . "</td>";
+                             echo "<td>" . $soil_type . "</td>";
                         }
-
+                        
                         if(isset($crop_season) && !empty($crop_season)){
                             echo "<td>" . $crop_season . "</td>";
                         }
 
                         if (isset($landscape) && !empty($landscape)) {
                             echo "<td>" . $landscape . "</td>";
+                        }
+
+                        if(isset($age) && !empty($age)){
+                            echo "<td>" . $age . "</td>";
                         }
 
                     @endphp
@@ -119,11 +119,10 @@
                     @php
                         $formatted = "";
                         $ctr = 0;
+
                         foreach($results as $text){
                             $lines = explode("\n", $text["result"]);
-                            // if($ctr < 2){
                                 foreach ($lines as $line) {
-                                // Detect "Application:" lines
                                     if (str_contains($line, "Application:")) {
                                         $appsli = explode("Application:", $line);
                                         $formatted .= "\n" . trim($appsli[0]) . " Applications:\n";
@@ -149,7 +148,6 @@
                                     <td>' . nl2br(trim($formatted)) . '</td>
                                 ';
                                 $formatted = "";
-                            // }
                             $ctr++;
                         }
                     @endphp
@@ -207,13 +205,35 @@
             <tbody>
                 <tr>
                     @php
-                            $formatted = "";
+                        $formatted = "";
                         $lines = explode("\n", $mode_of_application);
                         foreach ($lines as $line) {
                             $line = str_replace("\n", "", $line);
-                            if (str_contains($line, "Application:")) {
+                            if(str_contains($line, "Planting)")){
+                                $line .= "\n\nBEFORE PLANTING\nApply at least 10 bags of organic materials such as Organic Fertilizer/Compost/Dried Animal Manure at 14 days to 1 month before planting or during land preparation.\n\nAFTER PLANTING";
+                                $formatted .=  trim($line);
+                            }
+                            else if (str_contains($line, "Application:")) {
+                                // if (preg_match('/([\d.]+\s*bag[s]?)(?:\/ha)?\s*\(organic fertilizer\)/i', $line, $matches)) {
+                                //     $organicValue = $matches[1];
+                                //     $organic = preg_replace('/^Apply\s*/i', '', $organic);
+                                //     $organic = str_replace('.', '', $organicValue);
+                                // }
+                                
+                                // if (preg_match('/Organic Fertilizer\s*(.+)$/is', $line, $matches)) {
+                                //     $organic = preg_replace('/^Organic Fertilizer\s*/i', '', trim($matches[0]));
+                                // }
                                 $appsli = explode("Application:", $line);
-                                $formatted .= trim($appsli[0]) . " Application:\n";
+                                if(trim($appsli[0]) == "1st"){
+                                    $formatted .= trim($appsli[0]) . " Application: (" . $firstApp . ")\n";
+                                }
+                                else if(trim($appsli[0]) == "2nd"){
+                                    $formatted .= trim($appsli[0]) . " Application: (" . $secondApp . ")\n";
+                                }
+                                else if(trim($appsli[0]) == "3rd"){
+                                    $formatted .= trim($appsli[0]) . " Application: (" . $thirdApp . ")\n";
+                                }
+                                
                                 $formatted .=  trim($appsli[1]) ;
                             } 
                             else {

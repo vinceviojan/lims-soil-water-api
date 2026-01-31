@@ -5,17 +5,21 @@ namespace App\Http\Controllers;
 use App\Models\crops;
 use App\Models\msl_rst;
 use App\Models\acid_loving_crop;
+use App\Models\maturity;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 use App\Models\msl_test_result;
 use App\Services\MslTestResultService;
+use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class FertRightController extends Controller
 {
     public function generate(Request $request, MslTestResultService $service)
     {
         $value = $request->all();
+        Log::info('request', ['$value' => $value]);
         $tableName = strtolower($value["crop"] . '_fert_right');
         // $msl = msl_rst::where('id', $value['id'])->first();
         $msl = msl_test_result::where('id', $value['id'])
@@ -38,8 +42,8 @@ class FertRightController extends Controller
         $crop = crops::where('type', '=', $value['crop'])
             ->orWhere("code",'=',$value['crop'])
             ->first();
-
-
+        
+        
         $result = [];
         $cropsList = ["apple", "pepper"];
         $acidLovingCrops = null;
@@ -144,6 +148,38 @@ class FertRightController extends Controller
                 $data['crop_season'] = $value['crop_season'];
             }
 
+            if($value["crop"] == "rice"){
+                $maturity = maturity::where('code', '=', $value['maturity'])->first();
+                $mat = explode('/', $maturity->date_range);
+                $fApp = explode('-', $mat[0]);
+                $sApp = explode('-', $mat[1]);
+                $tApp = explode('-', $mat[2]);
+                $firstApp = ""; $secondApp = ""; $thirdApp = "";
+                if(Carbon::now()->addDays((int)$fApp[0])->format('F') == Carbon::now()->addDays((int)$fApp[1])->format('F')){
+                    $firstApp = Carbon::now()->addDays((int)$fApp[0])->format('F d') . "-" . Carbon::now()->addDays((int)$fApp[1])->format('d');
+                }
+                else{
+                    $firstApp = Carbon::now()->addDays((int)$fApp[0])->format('F d') . " to " . Carbon::now()->addDays((int)$fApp[1])->format('F d');
+                }
+
+                if(Carbon::now()->addDays((int)$sApp[0])->format('F') == Carbon::now()->addDays((int)$sApp[1])->format('F')){
+                    $secondApp = Carbon::now()->addDays((int)$sApp[0])->format('F d') . "-" . Carbon::now()->addDays((int)$sApp[1])->format('d');
+                }
+                else{
+                    $secondApp = Carbon::now()->addDays((int)$sApp[0])->format('F d') . " to " . Carbon::now()->addDays((int)$sApp[1])->format('F d');
+                }
+
+                if(Carbon::now()->addDays((int)$tApp[0])->format('F') == Carbon::now()->addDays((int)$tApp[1])->format('F')){
+                    $thirdApp = Carbon::now()->addDays((int)$tApp[0])->format('F d') . "-" . Carbon::now()->addDays((int)$tApp[1])->format('d');
+                }
+                else{
+                    $thirdApp = Carbon::now()->addDays((int)$tApp[0])->format('F d') . " to " . Carbon::now()->addDays((int)$tApp[1])->format('F d');
+                }
+
+                $data['firstApp'] = $firstApp;
+                $data['secondApp'] = $secondApp;
+                $data['thirdApp'] = $thirdApp;
+            }
 
             if($acidLovingCrops){
                 $data['acid_loving_crops_title'] = $acidLovingCrops->category;
@@ -169,16 +205,16 @@ class FertRightController extends Controller
                 $data['acid_loving_crops_text'] = $text;
             }
 
-            // if($value["crop"] == "rice"){
-            //     $pdf = PDF::loadView("fert-rice", $data);
-            //     return $pdf->stream();
-            // }
-            // else{
-            //     $pdf = PDF::loadView("fert", $data);
-            //     return $pdf->stream();
-            // }
-            $pdf = PDF::loadView("fert", $data);
+            if($value["crop"] == "rice"){
+                $pdf = PDF::loadView("fert-rice", $data);
                 return $pdf->stream();
+            }
+            else{
+                $pdf = PDF::loadView("fert", $data);
+                return $pdf->stream();
+            }
+            // $pdf = PDF::loadView("fert", $data);
+            //     return $pdf->stream();
         }
         else{
             return view("no_fert");

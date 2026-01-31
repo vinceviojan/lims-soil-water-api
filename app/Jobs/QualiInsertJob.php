@@ -28,7 +28,7 @@ class QualiInsertJob implements ShouldQueue
      */
     public function handle(MslTestResultService $service): void
     {
-        // Log::info('Qualitative Update job started', ['id' => $this->mslId]);
+        Log::info('Qualitative Update job started', ['id' => $this->mslId]);
 
         Cache::put('cancel_jobs', true);
 
